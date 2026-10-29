@@ -1,0 +1,711 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>은빛마을의 진실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&display=swap">
+<style>
+/* Layout: one night-blue screen. HUD strip on top, 4:3 pixel stage, touch pad below. Single dark look by design. */
+:root{
+  --bg:#080a17; --panel:#121833; --panel2:#1b2347; --line:#36406d;
+  --silver:#cfd6e6; --text:#e9edf7; --dim:#8d97bb; --gold:#f3c969; --red:#ff5d72; --blue:#5aa8ff;
+  --f-title:'Black Han Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-body:'Gowun Batang','Nanum Myeongjo',serif;
+  --f-ui:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);overflow:hidden}
+body{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:var(--f-ui)}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#hud{display:flex;align-items:center;gap:8px;justify-content:space-between;font-family:var(--f-ui);font-size:15px;color:var(--dim)}
+#hud .case{color:var(--silver);letter-spacing:.04em}
+#hud .case b{color:var(--gold);font-weight:400}
+.hbtn{font:inherit;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.hbtn:focus-visible,.btn:focus-visible,.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#stage{position:relative;width:256px;height:192px;background:#000;box-shadow:0 0 0 2px var(--line),0 18px 40px rgba(0,0,0,.6);overflow:hidden;--u:1}
+#game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.ov{position:absolute;inset:0}
+#dlg{position:absolute;left:3%;right:3%;bottom:3%;background:rgba(10,13,32,.94);border:2px solid var(--silver);border-radius:4px;
+  padding:clamp(8px,calc(var(--u)*5px),16px) clamp(10px,calc(var(--u)*7px),22px);min-height:30%;cursor:pointer;box-shadow:0 0 0 3px #0a0d20}
+#dlg .who{display:inline-block;font-family:var(--f-ui);font-size:clamp(13px,calc(var(--u)*6.5px),20px);padding:1px 8px;border-radius:3px;background:#0a0d20;margin-bottom:4px;letter-spacing:.03em}
+#dlg .txt{font-family:var(--f-body);font-size:clamp(14px,calc(var(--u)*7px),22px);line-height:1.55;word-break:keep-all;white-space:pre-wrap}
+#dlg .more{position:absolute;right:10px;bottom:6px;color:var(--gold);font-size:12px;animation:bob .8s steps(2) infinite}
+#dlg{display:flex;gap:clamp(8px,calc(var(--u)*5px),18px);align-items:flex-start;background:linear-gradient(180deg,rgba(18,24,56,.96),rgba(8,10,26,.97));box-shadow:0 0 0 3px #0a0d20,inset 0 0 0 2px #2a3360,0 8px 0 rgba(0,0,0,.35)}
+#dlg .face{flex:none;width:clamp(44px,calc(var(--u)*30px),104px);height:clamp(44px,calc(var(--u)*30px),104px);image-rendering:pixelated;border:2px solid var(--silver);border-radius:3px;box-shadow:0 0 0 2px #0a0d20}
+#dlg .dbody{flex:1;min-width:0}
+#dlg .who{border-bottom:2px solid currentColor;border-radius:3px 3px 0 0}
+@keyframes bob{50%{transform:translateY(3px)}}
+#loc{position:absolute;left:8px;top:8px;font-size:clamp(12px,calc(var(--u)*5.5px),17px);background:rgba(8,10,23,.7);padding:2px 8px;border-radius:3px;color:var(--silver);border-left:3px solid var(--gold)}
+#toast{position:absolute;left:50%;top:12%;transform:translateX(-50%);background:var(--gold);color:#1a1405;padding:4px 12px;border-radius:3px;font-size:clamp(13px,calc(var(--u)*6px),18px);white-space:nowrap;box-shadow:0 3px 0 #8a6a1a}
+.panel{position:absolute;inset:4%;background:rgba(12,16,38,.97);border:2px solid var(--silver);border-radius:6px;padding:clamp(10px,calc(var(--u)*6px),22px);overflow:auto;display:flex;flex-direction:column;gap:10px}
+.panel h2{margin:0;font-family:var(--f-title);font-weight:400;font-size:clamp(18px,calc(var(--u)*9px),30px);color:var(--silver);letter-spacing:.02em;text-wrap:balance}
+.panel .sub{color:var(--dim);font-size:clamp(12px,calc(var(--u)*5.5px),17px)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.unit{display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel2);border:2px solid var(--line);border-radius:6px;color:var(--text);padding:8px;cursor:pointer;font:inherit}
+.unit:hover,.unit:focus-visible{border-color:var(--gold);outline:none}
+.unit canvas{width:40px;height:56px;image-rendering:pixelated;flex:none;background:#0a0d20;border-radius:4px}
+.unit b{display:block;font-size:clamp(15px,calc(var(--u)*7px),21px);font-weight:400;color:var(--gold)}
+.unit span{font-size:clamp(12px,calc(var(--u)*5px),15px);color:var(--dim);line-height:1.35}
+.clue{background:var(--panel2);border-radius:5px;padding:8px 10px;border-left:3px solid var(--silver);min-width:0}
+.clue b{font-weight:400;color:var(--silver);font-size:clamp(14px,calc(var(--u)*6.5px),19px)}
+.clue p{margin:3px 0 0;font-family:var(--f-body);font-size:clamp(13px,calc(var(--u)*5.5px),16px);color:#c4cbe0;line-height:1.45;word-break:keep-all}
+.clue.miss{border-left-color:var(--line);color:var(--dim);opacity:.6}
+.hint{background:#2a2410;border:1px solid #6b5a22;color:var(--gold);border-radius:5px;padding:8px 10px;font-family:var(--f-body);font-size:clamp(13px,calc(var(--u)*6px),18px);word-break:keep-all}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{font:inherit;font-size:clamp(14px,calc(var(--u)*6px),18px);background:var(--silver);color:#0b0e1c;border:0;border-radius:5px;padding:6px 16px;cursor:pointer;box-shadow:0 3px 0 #7d869e}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.opt{font:inherit;text-align:left;background:var(--panel2);color:var(--text);border:2px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer;font-size:clamp(14px,calc(var(--u)*6px),18px);word-break:keep-all}
+.opt:hover{border-color:var(--gold)}
+.hearts{color:var(--red);letter-spacing:4px;font-size:clamp(16px,calc(var(--u)*7px),22px)}
+#title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,calc(var(--u)*4px),16px);text-align:center;background:linear-gradient(180deg,rgba(8,10,23,.2),rgba(8,10,23,.75) 70%)}
+#title .kick{font-size:clamp(12px,calc(var(--u)*5.5px),18px);color:var(--gold);letter-spacing:.25em}
+#title h1{margin:0;font-family:var(--f-title);font-weight:400;font-size:clamp(30px,calc(var(--u)*20px),72px);line-height:1;color:var(--silver);
+  text-shadow:0 3px 0 #3a4570,0 0 24px rgba(207,214,230,.45);letter-spacing:.02em}
+#title .by{font-family:var(--f-body);font-size:clamp(13px,calc(var(--u)*6px),20px);color:#c4cbe0}
+#credits{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(var(--u)*5px),20px);text-align:center;padding:16px}
+#credits h3{margin:0;font-family:var(--f-title);font-weight:400;color:var(--silver);font-size:clamp(20px,calc(var(--u)*11px),40px)}
+#credits p{margin:0;font-family:var(--f-body);color:#c4cbe0;font-size:clamp(13px,calc(var(--u)*6px),19px)}
+#logo{width:clamp(70px,calc(var(--u)*40px),150px);height:auto}
+#pad{display:none;width:100%;max-width:520px;justify-content:space-between;align-items:center;touch-action:none;padding-block:4px}
+#pad.on{display:flex}
+.dpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:2px}
+.dpad button,.abtns button{font:inherit;border:0;color:var(--text);touch-action:none}
+.dpad button{background:var(--panel2);border-radius:8px;font-size:20px;box-shadow:0 3px 0 #0a0d20}
+.dpad button:active,.dpad button.on{background:var(--line)}
+.abtns{display:grid;grid-template-columns:repeat(2,auto);gap:10px;align-items:end}
+.abtns button{width:66px;height:66px;border-radius:50%;font-size:17px;box-shadow:0 4px 0 rgba(0,0,0,.5)}
+.abtns .a{background:var(--silver);color:#0b0e1c;transform:translateY(-22px)}
+.abtns .b{background:#c0394d}
+.abtns .c{grid-column:1 / span 2;width:auto;height:34px;border-radius:17px;background:var(--panel2);font-size:15px}
+#keys{font-size:14px;color:var(--dim);text-align:center}
+#keys kbd{font-family:var(--f-ui);background:var(--panel);border:1px solid var(--line);border-bottom-width:3px;border-radius:4px;padding:0 6px;color:var(--text)}
+@media (prefers-reduced-motion:reduce){#dlg .more{animation:none}}
+</style>
+
+<div id="app">
+  <div id="hud" hidden>
+    <span class="case">사건 파일 No.1 · 증거 <b id="cnum">0</b>/10</span>
+    <span style="display:flex;gap:6px"><button class="hbtn" id="bNote">수첩</button><button class="hbtn" id="bSnd">소리 켬</button></span>
+  </div>
+  <div id="stage">
+    <canvas id="game" width="256" height="192"></canvas>
+    <div id="loc" hidden></div>
+    <div id="toast" hidden></div>
+    <div id="dlg" hidden><canvas class="face" width="48" height="48"></canvas><div class="dbody"><div class="who"></div><div class="txt"></div></div><div class="more">▼</div></div>
+    <div id="title" class="ov">
+      <div class="kick">탐정 정진영 사건 파일</div>
+      <h1>은빛마을의 진실</h1>
+      <div class="by">축제 전날 밤, 사라진 은종과 은빛 유령의 발자국</div>
+      <button class="btn" id="bStart">수사 시작</button>
+    </div>
+    <div id="menu" class="ov" hidden></div>
+    <div id="credits" class="ov" hidden>
+      <h3>사건 종결</h3>
+      <p>탐정 정진영 · 은빛마을의 진실</p>
+      <canvas id="logo" width="120" height="100"></canvas>
+      <p>Created by manamiwu</p>
+      <button class="btn" id="bAgain">처음부터 다시</button>
+    </div>
+  </div>
+  <div id="pad">
+    <div class="dpad">
+      <span></span><button data-k="up">▲</button><span></span>
+      <button data-k="left">◀</button><span></span><button data-k="right">▶</button>
+      <span></span><button data-k="down">▼</button><span></span>
+    </div>
+    <div class="abtns">
+      <button class="b" data-a="summon">소환</button>
+      <button class="a" data-a="act">조사</button>
+      <button class="c" data-a="note">수첩</button>
+    </div>
+  </div>
+  <div id="keys">이동 <kbd>방향키</kbd> · 조사·대화 <kbd>E</kbd> · 경찰 소환 <kbd>Q</kbd> · 수첩 <kbd>C</kbd></div>
+</div>
+
+<script>
+(()=>{
+const W=256,H=192,T=16;
+const cv=document.getElementById('game'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+const dk=document.createElement('canvas');dk.width=W;dk.height=H;const dctx=dk.getContext('2d');
+const $=id=>document.getElementById(id);
+
+/* ---------- utils ---------- */
+const hash=(x,y)=>{let n=(x*374761393+y*668265263)|0;n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295};
+function shade(hex,a){const c=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(a<0?v*(1+a):v+(255-v)*a)));
+  return '#'+((1<<24)|(f(c>>16)<<16)|(f((c>>8)&255)<<8)|f(c&255)).toString(16).slice(1)}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- sound ---------- */
+let AC=null,sound=true;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}}return AC}
+function tone(f,d,type='square',v=.04,when=0){if(!sound)return;const a=ac();if(!a)return;try{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;
+  const t0=a.currentTime+when;g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g).connect(a.destination);o.start(t0);o.stop(t0+d+.03)}catch(e){}}
+const sfx={blip:()=>tone(620+Math.random()*80,.025,'square',.015),
+  clue:()=>{tone(784,.12,'square',.04);tone(1046,.2,'square',.04,.11);tone(1318,.25,'triangle',.04,.22)},
+  siren:()=>{for(let i=0;i<6;i++)tone(i%2?640:880,.2,'sawtooth',.025,i*.2)},
+  wrong:()=>{tone(180,.18,'square',.05);tone(130,.3,'square',.05,.15)},
+  right:()=>{tone(660,.1,'triangle',.05);tone(990,.18,'triangle',.05,.1)},
+  bell:()=>{tone(1318,3,'sine',.12);tone(659,3.5,'sine',.08);tone(1976,1.6,'sine',.04);tone(1318,3,'sine',.1,1.4);tone(659,3.5,'sine',.07,1.4)},
+  door:()=>{tone(220,.08,'square',.03);tone(160,.1,'square',.03,.07)}};
+
+/* ---------- sprites ---------- */
+const HEADS={
+ short:["..........","..hhhhhh..",".hhhhhhhh.",".hssssssh.",".hsessesh.","..ssssss..","...ssss..."],
+ fedora:["..HHHHHH..","..xxxxxx..","HHHHHHHHHH",".hssssssh.",".hsessesh.","..ssssss..","...ssss..."],
+ chef:["..WWWWWW..",".WWWWWWWW.","..WWWWWW..",".hssssssh.",".hsessesh.","..ssssss..","...ssss..."],
+ bun:["....hh....","..hhhhhh..",".hhhhhhhh.",".hssssssh.",".hsessesh.","..ssssss..","...ssss..."],
+ old:["..........","..hhhhhh..",".hssssssh.",".hssssssh.",".hsessesh.","..smmmms..","...ssss..."],
+ glasses:["..........","..hhhhhh..",".hhhhhhhh.",".hssssssh.",".hgeggegh.","..ssssss..","...ssss..."],
+ hood:["..........","...cccc...","..cccccc..",".cssssssc.",".csessesc.","..ssssss..","...ssss..."],
+ mask:["..........","...cccc...","..cccccc..",".cssssssc.",".csessesc.","..qqqqqq..","...ssss..."],
+ cap:["..........","..KKKKKK..",".KKKKKKKKK",".hssssssh.",".hsessesh.","..ssssss..","...ssss..."]};
+const BODIES={
+ normal:["..cccccc..",".cccccccc.",".sccccccs.",".sccccccs.","..cccccc.."],
+ apron:["..cccccc..",".ccaaaacc.",".scaaaacs.",".scaaaacs.","..caaaac.."],
+ trench:["..cdccdc..",".cccddccc.",".sccccccs.",".scddddcs.","..cccccc.."],
+ vest:["..cccccc..",".cdddddcc.",".scdddccs.",".sccccccs.","..cccccc.."],
+ child:["..cccccc..",".sccccccs.","..cccccc.."]};
+const LEGS={
+ std:[["..pp..pp..","..pp..pp..","..bb..bb.."],["..pp..pp..","..pp...pp.","..bb...bb."]],
+ trench:[["..cccccc..","..pp..pp..","..bb..bb.."],["..cccccc..","..pp...pp.","..bb...bb."]],
+ dress:[["..cccccc..",".cccccccc.","..bb..bb.."],["..cccccc..",".cccccccc.","..bb..bb.."]],
+ child:[["...p..p...","...b..b..."],["...p...p..","...b...b.."]]};
+function polish(src){const w=src.width,h=src.height,d=src.getContext('2d').getImageData(0,0,w,h).data;
+  const c=document.createElement('canvas');c.width=w+2;c.height=h+2;const g=c.getContext('2d');const id=g.createImageData(w+2,h+2),o=id.data;
+  const A=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&d[(y*w+x)*4+3]>0;
+  for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++){const k=((y+1)*(w+2)+(x+1))*4;
+    if(A(x,y)){const i=(y*w+x)*4;let f=1;if(!A(x+1,y))f=.7;else if(!A(x-1,y))f=1.2;else if(!A(x,y-1))f=1.12;else if(!A(x,y+1))f=.85;
+      o[k]=d[i]*f;o[k+1]=d[i+1]*f;o[k+2]=d[i+2]*f;o[k+3]=255}
+    else if(A(x-1,y)||A(x+1,y)||A(x,y-1)||A(x,y+1)){o[k]=10;o[k+1]=9;o[k+2]=22;o[k+3]=240}}
+  g.putImageData(id,0,0);return c}
+function makeSprite(sp){
+  const head=HEADS[sp.head||'short'],body=BODIES[sp.body||(sp.child?'child':'normal')],legs=LEGS[sp.legs||(sp.child?'child':'std')];
+  const col={h:sp.hair||'#222',s:sp.skin||'#efc39c',e:'#15131f',c:sp.coat,d:shade(sp.coat,-.32),p:sp.pants||'#2a2733',b:sp.boots||'#1a1720',
+    H:sp.hat||'#333',x:sp.band||'#7a2b2b',W:'#f4f2ec',m:sp.hair||'#ddd',g:'#1b1b22',a:sp.apron||'#ddd4c0',K:sp.hat||'#222',q:'#a8c8ea'};
+  return [0,1].map(f=>{const rows=head.concat(body,legs[f]);const c=document.createElement('canvas');c.width=10;c.height=rows.length;const g=c.getContext('2d');
+    rows.forEach((r,y)=>{for(let x=0;x<10;x++){const ch=r[x];if(ch&&ch!=='.'&&col[ch]){g.fillStyle=col[ch];g.fillRect(x,y,1,1)}}});return polish(c)})}
+function makeDog(){const rows=["..........b.",".........bbb","b........beb",".bbbbbbbbbbn",".bbvvvvbbbb.",".bbbbbbbbb..",".b.b....b.b.",".b.b....b.b."];
+  const col={b:'#8a5a2b',e:'#111',n:'#111',v:'#2f5fb0'};
+  return [0,1].map(f=>{const c=document.createElement('canvas');c.width=12;c.height=8;const g=c.getContext('2d');
+    rows.forEach((r,y)=>{for(let x=0;x<12;x++){let ch=r[x];if(f&&y>=6){ch=(y===6?".b..b..b..b.":"b...b..b...b")[x]}
+      if(ch&&ch!=='.'){g.fillStyle=col[ch];g.fillRect(x,y,1,1)}}});return polish(c)})}
+const SPR={
+ player:makeSprite({head:'fedora',hat:'#3b2a22',band:'#8a2f2f',hair:'#18151a',coat:'#b8915a',body:'trench',legs:'trench',pants:'#2a2733'}),
+ doyun:makeSprite({head:'short',hair:'#5a3a22',coat:'#4f6d5e',body:'apron',apron:'#c8bfa8'}),
+ haneul:makeSprite({head:'hood',coat:'#f2c230',child:true,pants:'#3a3550',boots:'#c0394d'}),
+ baker:makeSprite({head:'chef',hair:'#3a2a20',coat:'#efece2',body:'apron',apron:'#d9c39a',pants:'#5a4a3a'}),
+ madame:makeSprite({head:'bun',hair:'#a8322e',coat:'#6a3d8a',legs:'dress',skin:'#f3cfb0'}),
+ ryu:makeSprite({head:'glasses',hair:'#2a2a2a',coat:'#6b6f7d',body:'vest',pants:'#4a4d58'}),
+ chief:makeSprite({head:'old',hair:'#e6e6ea',coat:'#2f5fb0',body:'trench',legs:'trench',pants:'#2a2733'}),
+ baek:makeSprite({head:'old',hair:'#e6e6ea',coat:'#7a6a55',body:'apron',apron:'#b8a888'}),
+ csi:makeSprite({head:'mask',coat:'#e8edf5',body:'normal',pants:'#e8edf5',boots:'#5aa8ff'}),
+ k9:makeSprite({head:'cap',hat:'#1f3a6a',hair:'#222',coat:'#1f3a6a',body:'vest',pants:'#1f2a44'}),
+ swat:makeSprite({head:'cap',hat:'#15161c',hair:'#222',coat:'#2a2c36',body:'vest',pants:'#1d1e26'}),
+ dog:makeDog()};
+
+/* ---------- clues ---------- */
+const CLUES={
+ footprint:{n:'은가루 발자국',d:'공방 바닥의 은가루 장화 자국. 280mm, 옛 광부 장화 밑창 무늬. 이것이 "유령 발자국"의 정체다.'},
+ cloth:{n:'파란 모직 천 조각',d:'공방 창문 못에 걸려 있던 남색 고급 양모 조각.'},
+ trail:{n:'경찰견 추적 결과',d:'발자국 냄새가 두 갈래로 이어진다. 하나는 촌장 댁 창고, 하나는 북쪽 옛 은광.'},
+ doyun_alibi:{n:'도윤의 알리바이',d:'밤 10시 반부터 새벽 4시까지 빵집에서 반죽을 도왔다. 박 제빵사가 증인.'},
+ haneul:{n:'하늘이의 목격담',d:'밤 11시쯤 파란 코트를 입은 큰 그림자가 무거운 자루를 끌고 광산 쪽으로 갔다.'},
+ ryu:{n:'류 씨의 알리바이',d:'밤 9시부터 아침 7시까지 여관 방에 있었다. 현관 종이 한 번도 울리지 않았다.'},
+ chief_lie:{n:'촌장의 진술',d:'"어젯밤엔 일찍 잤고 밖에 나가지 않았다." 파란 모직 코트를 입고 있다.'},
+ boots:{n:'은가루 묻은 광부 장화',d:'촌장 댁 창고에서 발견. 280mm. 밑창에 은가루가 가득하다.'},
+ contract:{n:'은광 부지 매매 계약서',d:'"은빛축제가 취소되면 마을 회의에서 은광 부지 매각을 의결한다." 강만석의 서명.'},
+ bell:{n:'되찾은 은종',d:'옛 은광 돌무더기 뒤에서 자루에 싸인 채 발견. 자루에 파란 실밥이 붙어 있다.'}};
+const REQUIRED=['footprint','cloth','boots','contract','bell'];
+
+/* ---------- state ---------- */
+const S={mode:'title',map:null,f:{},clues:new Set(),hearts:3,unit:null,siren:0,flash:0,shake:0,fade:0,t:0,morning:false,cam:{x:0,y:0}};
+const P={x:0,y:0,frame:0,walk:0,moving:false};
+const keys={};
+
+/* ---------- map building ---------- */
+const SOLID_TILE={2:1,3:1,4:1,6:1};
+function newMap(name,w,h,fill){return{name,w,h,tiles:new Array(w*h).fill(fill),block:new Uint8Array(w*h),buildings:[],objs:[],npcs:[],spots:[],lights:[],dark:.74,plr:46,layer:null}}
+const tile=(m,x,y)=>(x<0||y<0||x>=m.w||y>=m.h)?2:m.tiles[y*m.w+x];
+const setT=(m,x,y,v)=>{if(x>=0&&y>=0&&x<m.w&&y<m.h)m.tiles[y*m.w+x]=v};
+const blockR=(m,x,y,w,h,v=1)=>{for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)if(i>=0&&j>=0&&i<m.w&&j<m.h)m.block[j*m.w+i]=v};
+
+function buildVillage(){
+  const m=newMap('은빛마을',36,26,0);m.label='은빛마을';
+  for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++){if(hash(x,y)>.88)setT(m,x,y,9);if(x===0||y===0||x===m.w-1||y===m.h-1)setT(m,x,y,2)}
+  [[2,2],[11,3],[21,2],[23,3],[33,2],[2,11],[33,11],[20,17],[33,23],[2,23],[11,23],[22,23],[8,2],[30,2],[1,6],[34,7]].forEach(([x,y])=>setT(m,x,y,2));
+  const hl=(x0,x1,y)=>{for(let x=x0;x<=x1;x++)setT(m,x,y,1)},vl=(x,y0,y1)=>{for(let y=y0;y<=y1;y++)setT(m,x,y,1)};
+  for(let y=10;y<=14;y++)hl(13,21,y);
+  hl(2,33,13);hl(2,33,21);vl(17,14,21);vl(14,3,9);vl(6,9,12);vl(28,9,12);vl(5,20,20);vl(27,20,20);vl(32,20,20);vl(12,20,20);vl(11,9,12);
+  // pond
+  [[30,23],[31,23],[30,24],[31,24],[29,24]].forEach(([x,y])=>setT(m,x,y,3));
+  // mine rocks
+  [[13,1],[14,1],[15,1],[13,2],[15,2],[12,1],[16,1]].forEach(([x,y])=>setT(m,x,y,6));
+  m.buildings=[
+   {id:'shop',x:3,y:4,w:7,h:5,roofc:'#7a3434',door:[6,8],win:[4,8],lit:1,sign:'#cfd6e6'},
+   {id:'house1',x:10,y:5,w:3,h:4,roofc:'#574060',door:[11,8],win:[],lit:0},
+   {id:'inn',x:25,y:4,w:8,h:5,roofc:'#34506e',door:[28,8],win:[26,30,31],lit:1,sign:'#f3c969'},
+   {id:'bakery',x:3,y:15,w:6,h:5,roofc:'#8a6630',door:[5,19],win:[7],lit:1,sign:'#e0b070'},
+   {id:'house2',x:10,y:16,w:4,h:4,roofc:'#3f6a55',door:[12,19],win:[10],lit:1},
+   {id:'chief',x:24,y:15,w:7,h:5,roofc:'#2d4377',door:[27,19],win:[25,29],lit:0,sign:'#7fb0ff'},
+   {id:'shed',x:32,y:16,w:2,h:4,roof:1,roofc:'#4a3a2e',wall:'#5a4a3a',door:[32,19],win:[],shed:1},
+   {id:'tower',x:16,y:3,w:3,h:7,tower:1,door:[17,9]}];
+  m.buildings.forEach(b=>blockR(m,b.x,b.y,b.w,b.h));
+  blockR(m,14,2,1,1);
+  m.objs=[{t:'well',x:20,y:11}];blockR(m,20,11,1,1);
+  [[5,12],[10,12],[24,12],[33,12],[12,10],[22,10],[9,20],[23,20],[16,16],[15,22]].forEach(([x,y])=>{m.objs.push({t:'lamp',x,y});blockR(m,x,y,1,1);m.lights.push({x:x*T+8,y:y*T-2,r:38,lamp:1})});
+  m.buildings.forEach(b=>{if(b.lit)(b.win||[]).forEach(wx=>m.lights.push({x:wx*T+8,y:(b.y+(b.roof||2))*T+8,r:20}))});
+  m.npcs=[
+   {id:'doyun',name:'도윤',spr:'doyun',x:9*T+8,y:10*T+12},
+   {id:'haneul',name:'하늘',spr:'haneul',x:22*T+8,y:12*T+12},
+   {id:'baker',name:'박 제빵사',spr:'baker',x:8*T+8,y:20*T+12},
+   {id:'madame',name:'마담 오',spr:'madame',x:31*T+8,y:10*T+12},
+   {id:'ryu',name:'류',spr:'ryu',x:11*T+8,y:14*T+12},
+   {id:'chief',name:'강만석 촌장',spr:'chief',x:19*T+8,y:9*T+12}];
+  m.spots=[
+   {id:'shopDoor',x:6*T+8,y:9*T+2,r:14},{id:'innDoor',x:28*T+8,y:9*T+2,r:14},{id:'bakeryDoor',x:5*T+8,y:20*T+2,r:14},
+   {id:'house1Door',x:11*T+8,y:9*T+2,r:14},{id:'house2Door',x:12*T+8,y:20*T+2,r:14},
+   {id:'chiefDoor',x:27*T+8,y:20*T+2,r:14},{id:'shed',x:32*T+8,y:20*T+2,r:16},{id:'tower',x:17*T+8,y:10*T+2,r:16},
+   {id:'mine',x:14*T+8,y:3*T+4,r:16},{id:'well',x:20*T+8,y:12*T+2,r:16},{id:'pond',x:30*T+8,y:22*T+8,r:20}];
+  return m}
+
+function fromStrings(name,rows,legend){const m=newMap(name,rows[0].length,rows.length,0);rows.forEach((r,y)=>{for(let x=0;x<r.length;x++)m.tiles[y*m.w+x]=legend[r[x]]});return m}
+function buildShop(){
+  const m=fromStrings('공방',["WWWWWWWWWWWW","WWWWWWWWWWWW","W..........W","W..........W","W..........W","W..........W","W..........W","W..........W","WWWWW..WWWWW"],{W:4,'.':5});
+  m.label='백노인 은세공 공방';m.dark=.42;m.plr=64;
+  blockR(m,1,2,3,1);blockR(m,5,2,2,1);blockR(m,10,2,1,1);
+  m.lights=[{x:10*T+8,y:2*T+8,r:46,warm:1},{x:6*T,y:4*T,r:60}];
+  m.spots=[{id:'tools',x:2*T+8,y:2*T+10,r:18},{id:'stand',x:6*T,y:2*T+10,r:18},{id:'window',x:9*T+8,y:2*T+2,r:18},
+   {id:'prints',x:8*T+8,y:5*T+8,r:18},{id:'outline',x:3*T+8,y:5*T+8,r:16},{id:'furnace',x:10*T+8,y:2*T+10,r:14},{id:'shopExit',x:6*T,y:8*T+8,r:14}];
+  return m}
+function buildMine(){
+  const m=fromStrings('광산',["RRRRRRRRRRRRRR","RRRRR....RRRRR","RRRRR....RRRRR","RRRRRR..RRRRRR","RR..........RR","RR..........RR","RR....RR....RR","RR..........RR","RRRRRR..RRRRRR","RRRRRR..RRRRRR"],{R:6,'.':7});
+  m.label='옛 은광';m.dark=.9;m.plr=44;
+  blockR(m,6,3,2,1);
+  m.lights=[{x:3*T,y:4*T+8,r:26,warm:1},{x:11*T,y:4*T+8,r:26,warm:1}];
+  m.spots=[{id:'rubble',x:7*T,y:3*T+8,r:20},{id:'bellSpot',x:7*T,y:1*T+14,r:18},{id:'cart',x:3*T,y:7*T+8,r:16},{id:'mineExit',x:7*T,y:9*T+8,r:14}];
+  return m}
+const MAPS={village:buildVillage(),shop:buildShop(),mine:buildMine()};
+
+/* ---------- baking static layers ---------- */
+function drawTile(g,c,px,py,tx,ty){
+  const h=hash(tx,ty),h2=hash(ty+7,tx+3);
+  if(c===0||c===9||c===2){g.fillStyle=S.morning?'#3f7a4e':'#22423a';g.fillRect(px,py,T,T);
+    for(let i=0;i<5;i++){const a=hash(tx*5+i,ty*3),b=hash(ty*7+i,tx);g.fillStyle=a>.5?(S.morning?'#4a8a58':'#2b5446'):(S.morning?'#356a44':'#1c372f');g.fillRect(px+((a*15)|0),py+((b*15)|0),1,2)}
+    if(h>.55&&c!==2){const a=px+((h2*12)|0)+1,b=py+((h*10)|0)+3;g.fillStyle=S.morning?'#5a9a64':'#2f5c4a';g.fillRect(a,b,1,2);g.fillRect(a+2,b,1,2);g.fillRect(a+1,b+1,1,2)}
+    if(c===9){g.fillStyle='#d9e0ee';g.fillRect(px+((h*12)|0)+2,py+((h2*10)|0)+3,2,2);g.fillStyle='#aab4cc';g.fillRect(px+((h2*12)|0)+1,py+((h*10)|0)+2,1,1)}
+    if(c===2){g.fillStyle='#3b2a20';g.fillRect(px+6,py+10,4,6);
+      const cc=S.morning?['#245a35','#2f7344','#3e8c55']:['#10291e','#173829','#21503a'];
+      g.fillStyle=cc[0];g.fillRect(px+1,py+2,14,10);g.fillRect(px+3,py,10,14);
+      g.fillStyle=cc[1];g.fillRect(px+2,py+2,11,8);g.fillRect(px+4,py+1,8,10);
+      g.fillStyle=cc[2];g.fillRect(px+4,py+2,4,3);g.fillRect(px+3,py+4,2,2)}}
+  else if(c===1){g.fillStyle=S.morning?'#8f93a2':'#565c74';g.fillRect(px,py,T,T);g.fillStyle=S.morning?'#7c8090':'#474c61';
+    const o=(ty%2)*4;for(let i=0;i<16;i+=8)g.fillRect(px+((i+o)%16),py,1,8);for(let i=0;i<16;i+=8)g.fillRect(px+((i+o+4)%16),py+8,1,8);g.fillRect(px,py+7,16,1);g.fillRect(px,py+15,16,1);
+    if(h>.7){g.fillStyle=S.morning?'#a6aab8':'#666d88';g.fillRect(px+((h2*12)|0)+2,py+3,2,1)}}
+  else if(c===3){g.fillStyle=S.morning?'#3d7fb5':'#17305a';g.fillRect(px,py,T,T);g.fillStyle=S.morning?'#6aa8d8':'#2c4c80';g.fillRect(px+((h*10)|0),py+4,5,1);g.fillRect(px+((h2*10)|0)+2,py+11,4,1)}
+  else if(c===4){g.fillStyle='#2b2440';g.fillRect(px,py,T,T);g.fillStyle='#352d52';for(let j=0;j<16;j+=4){const o=(j/4%2)*4;for(let i=0;i<16;i+=8)g.fillRect(px+i+o,py+j,7,3)}}
+  else if(c===5){g.fillStyle='#5a3e2b';g.fillRect(px,py,T,T);g.fillStyle='#4a3222';g.fillRect(px,py+5,T,1);g.fillRect(px,py+11,T,1);g.fillRect(px+((h*14)|0),py,1,5);g.fillRect(px+((h2*14)|0),py+6,1,5);
+    g.fillStyle='#6a4a33';g.fillRect(px+((h2*10)|0),py+2,3,1)}
+  else if(c===6){g.fillStyle='#22222c';g.fillRect(px,py,T,T);g.fillStyle='#30303e';g.fillRect(px+((h*8)|0),py+((h2*8)|0),7,5);g.fillStyle='#3d3d4e';g.fillRect(px+((h*8)|0)+1,py+((h2*8)|0),4,1);
+    if(h>.8){g.fillStyle='#9aa4bf';g.fillRect(px+((h2*13)|0)+1,py+((h*13)|0)+1,1,1)}}
+  else if(c===7){g.fillStyle='#3f342c';g.fillRect(px,py,T,T);g.fillStyle='#342a23';g.fillRect(px+((h*14)|0),py+((h2*14)|0),2,1);g.fillRect(px+((h2*14)|0),py+((h*14)|0),1,1)}}
+
+function drawBuilding(g,b){
+  const x=b.x*T,y=b.y*T,w=b.w*T,h=b.h*T;
+  if(b.tower){
+    g.fillStyle='#646a80';g.fillRect(x+2,y+16,w-4,h-16);g.fillStyle='#565b70';
+    for(let j=y+18;j<y+h;j+=6){const o=((j-y)/6%2)*5;for(let i=x+2+o;i<x+w-2;i+=10)g.fillRect(i,j,1,6);g.fillRect(x+2,j,w-4,1)}
+    g.fillStyle='#343a52';for(let i=0;i<20;i++){const half=Math.round((i/20)*(w/2+3));g.fillRect(x+w/2-half,y-6+i,half*2,1)}
+    g.fillStyle='#4a5272';g.fillRect(x+w/2-1,y-10,2,5);
+    const cx=x+w/2,cy=y+28;g.fillStyle='#cfd6e6';g.beginPath();g.arc(cx,cy,8,0,7);g.fill();g.fillStyle='#2a2f45';g.beginPath();g.arc(cx,cy,6.5,0,7);g.fill();
+    g.fillStyle='#e9edf7';g.beginPath();g.arc(cx,cy,6,0,7);g.fill();g.fillStyle='#1b1f33';g.fillRect(cx-.5,cy-5,1,5);g.fillRect(cx,cy-.5,4,1);
+    g.fillStyle='#0b0d18';g.fillRect(cx-7,y+42,14,14);g.fillStyle='#646a80';g.fillRect(cx-1,y+42,2,14);
+    if(S.morning){g.fillStyle='#e6d9a8';g.fillRect(cx-5,y+45,10,8);g.fillRect(cx-6,y+52,12,2);g.fillStyle='#fff6d0';g.fillRect(cx-3,y+46,2,5)}
+    g.fillStyle='#2a1f18';g.fillRect(cx-6,y+h-15,12,15);g.fillStyle='#3d2c20';g.fillRect(cx-5,y+h-14,10,14);g.fillStyle='#f3c969';g.fillRect(cx+2,y+h-7,1,1);
+    return}
+  const rr=(b.roof||2)*T,wall=b.wall||'#6e6656';
+  g.fillStyle=S.morning?shade(wall,.15):wall;g.fillRect(x,y+rr,w,h-rr);
+  g.fillStyle=shade(wall,-.3);for(let i=0;i<=b.w;i++)g.fillRect(Math.min(x+i*T,x+w-2),y+rr,2,h-rr);g.fillRect(x,y+h-3,w,3);g.fillRect(x,y+rr+14,w,1);
+  g.fillStyle=b.roofc;g.fillRect(x-2,y,w+4,rr);g.fillStyle=shade(b.roofc,-.25);for(let i=3;i<rr;i+=4)g.fillRect(x-2,y+i,w+4,1);
+  for(let i=0;i<w+4;i+=6){g.fillRect(x-2+i+((i/6)%2)*3,y+1,1,rr-1)}
+  g.fillStyle=shade(b.roofc,.25);g.fillRect(x-2,y,w+4,2);g.fillStyle='rgba(0,0,0,.35)';g.fillRect(x,y+rr,w,3);
+  if(['shop','inn','bakery','house2'].includes(b.id)){const cx2=x+w-14;g.fillStyle='#4a3a3a';g.fillRect(cx2,y-6,7,11);g.fillStyle='#5e4a4a';g.fillRect(cx2,y-6,2,11);g.fillStyle='#2a2020';g.fillRect(cx2-1,y-7,9,2)}
+  (b.win||[]).forEach(wx=>{const px=wx*T+3,py=y+rr+4;g.fillStyle='#2a1f18';g.fillRect(px-1,py-1,12,10);
+    g.fillStyle=b.lit?(S.morning?'#bcd6ea':'#f3c969'):'#141a2e';g.fillRect(px,py,10,8);g.fillStyle='#2a1f18';g.fillRect(px+4,py,1,8);g.fillRect(px,py+3,10,1);
+    if(b.lit&&!S.morning){g.fillStyle='#ffe7a3';g.fillRect(px+1,py+1,2,2)}
+    if(b.lit){g.fillStyle='#3d2a1c';g.fillRect(px-1,py+9,12,3);const fl=['#d94a5a','#cfd6e6','#f3c969','#d94a5a','#9fd4b0'];for(let i=0;i<5;i++){g.fillStyle=fl[(i+wx)%5];g.fillRect(px+i*2,py+7+(i%2),2,2)}g.fillStyle='#2f5c4a';g.fillRect(px,py+9,10,1)}});
+  const dx=b.door[0]*T,dy=b.door[1]*T;
+  g.fillStyle='#7d8296';g.fillRect(dx+1,dy+16,14,2);g.fillStyle='#565b70';g.fillRect(dx+1,dy+17,14,1);
+  g.fillStyle='#1d1510';g.fillRect(dx+2,dy+1,12,15);g.fillStyle=b.shed?'#4a3626':'#3d2c20';g.fillRect(dx+3,dy+2,10,14);
+  g.fillStyle=shade(b.shed?'#4a3626':'#3d2c20',-.3);g.fillRect(dx+8,dy+2,1,14);
+  if(b.shed&&!S.f.shedOpen){g.fillStyle='#c9ced9';g.fillRect(dx+6,dy+8,4,4);g.fillStyle='#1d1510';g.fillRect(dx+7,dy+10,2,1)}
+  else{g.fillStyle='#f3c969';g.fillRect(dx+10,dy+9,1,2)}
+  if(b.shed&&S.f.shedOpen){g.fillStyle='#07070c';g.fillRect(dx+3,dy+2,10,14)}
+  if(b.sign){g.fillStyle='#3d2c20';g.fillRect(dx-6,dy-9,12,7);g.fillStyle=b.sign;g.fillRect(dx-4,dy-7,8,3)}}
+
+function drawObj(g,o){const x=o.x*T,y=o.y*T;
+  if(o.t==='well'){g.fillStyle='#4a4f63';g.fillRect(x+1,y+6,14,10);g.fillStyle='#6c7390';g.fillRect(x+1,y+6,14,2);g.fillStyle='#0c1020';g.fillRect(x+3,y+8,10,3);
+    g.fillStyle='#3d2c20';g.fillRect(x+1,y-4,2,11);g.fillRect(x+13,y-4,2,11);g.fillStyle='#5a3434';g.fillRect(x-1,y-6,18,3)}
+  if(o.t==='lamp'){g.fillStyle='#1f2230';g.fillRect(x+7,y-2,2,18);g.fillRect(x+5,y+14,6,2);g.fillStyle='#2a2e40';g.fillRect(x+4,y-8,8,7);
+    g.fillStyle='#f3c969';g.fillRect(x+5,y-7,6,5);g.fillStyle='#fff3c4';g.fillRect(x+7,y-6,2,3);g.fillStyle='#1f2230';g.fillRect(x+5,y-10,6,2)}}
+
+function bake(m){
+  const c=document.createElement('canvas');c.width=m.w*T;c.height=m.h*T;const g=c.getContext('2d');
+  for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++)drawTile(g,m.tiles[y*m.w+x],x*T,y*T,x,y);
+  if(m===MAPS.village){
+    for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++){if(m.tiles[y*m.w+x]!==1)continue;const px=x*T,py=y*T;
+      if(tile(m,x,y-1)!==1){g.fillStyle='rgba(0,0,0,.3)';g.fillRect(px,py,T,2)}
+      if(tile(m,x,y+1)!==1){g.fillStyle=S.morning?'#a9adbb':'#6c738c';g.fillRect(px,py+15,T,1)}
+      if(tile(m,x-1,y)!==1){g.fillStyle='rgba(0,0,0,.2)';g.fillRect(px,py,1,T)}}
+    m.buildings.forEach(b=>{g.fillStyle='rgba(0,0,12,.32)';g.fillRect(b.x*T+4,(b.y+b.h)*T,b.w*T,4);g.fillRect((b.x+b.w)*T,b.y*T+10,4,b.h*T-6)});
+    // mine entrance
+    const mx=14*T,my=1*T;g.fillStyle='#07070c';g.fillRect(mx+1,my+3,14,29);g.fillStyle='#5a3f28';g.fillRect(mx-1,my+1,18,3);g.fillRect(mx-1,my+1,3,31);g.fillRect(mx+14,my+1,3,31);
+    if(!S.morning){g.fillStyle='#8a6a40';g.fillRect(mx+2,my+12,12,2);g.fillRect(mx+2,my+20,12,2)}
+    g.fillStyle='#3d3d4e';g.fillRect(mx+2,my+29,12,3);
+    m.buildings.forEach(b=>drawBuilding(g,b));m.objs.forEach(o=>drawObj(g,o))}
+  if(m===MAPS.shop){
+    // back wall decoration
+    g.fillStyle='#1d1830';g.fillRect(0,0,m.w*T,4);g.fillStyle='#3a2f45';g.fillRect(T,T+6,10*T,10);g.fillStyle='#4a3a2e';g.fillRect(T,T+4,10*T,2);
+    for(let i=0;i<6;i++){g.fillStyle='#cfd6e6';g.fillRect(T+10+i*14,T-4,4,4);g.fillStyle='#9aa4bf';g.fillRect(T+11+i*14,T-3,2,2)}
+    g.fillStyle='#4a3a2e';g.fillRect(T+4,T,96,2);
+    const wx=9*T,wy=4;g.fillStyle='#2a1f18';g.fillRect(wx-1,wy-1,18,20);g.fillStyle='#0f1838';g.fillRect(wx,wy,16,18);g.fillStyle='#e8edf7';g.beginPath();g.arc(wx+11,wy+6,3,0,7);g.fill();
+    g.fillStyle='#2a1f18';g.fillRect(wx+7,wy,1,18);g.fillRect(wx,wy+8,16,1);g.fillStyle='#8a8f9c';g.fillRect(wx+2,wy+17,1,3);
+    if(!S.clues.has('cloth')){g.fillStyle='#2f5fb0';g.fillRect(wx+1,wy+18,3,3);g.fillStyle='#4a7ad0';g.fillRect(wx+1,wy+18,1,1)}
+    // bench
+    g.fillStyle='#6a4a30';g.fillRect(T,2*T+2,3*T,10);g.fillStyle='#4a3222';g.fillRect(T,2*T+12,3*T,4);g.fillStyle='#8a8f9c';g.fillRect(T+6,2*T+4,8,2);g.fillRect(T+20,2*T+5,6,1);g.fillStyle='#c9a66b';g.fillRect(T+30,2*T+4,4,3);
+    // stand
+    g.fillStyle='#3a2f45';g.fillRect(5*T+4,2*T+6,24,10);g.fillStyle='#7a2b3a';g.fillRect(5*T+6,2*T+2,20,6);g.fillStyle='#5a1f2b';g.fillRect(5*T+9,2*T+4,14,2);
+    // furnace
+    g.fillStyle='#3a3a46';g.fillRect(10*T,2*T-4,16,20);g.fillStyle='#ff7a3a';g.fillRect(10*T+4,2*T+6,8,6);g.fillStyle='#ffd27a';g.fillRect(10*T+6,2*T+8,4,3);
+    // outline: dropped hammer & silver bits
+    g.fillStyle='rgba(220,226,240,.35)';g.fillRect(3*T+1,5*T+2,14,1);g.fillRect(3*T+1,5*T+13,14,1);g.fillRect(3*T+1,5*T+2,1,12);g.fillRect(3*T+14,5*T+2,1,12);
+    g.fillStyle='#7a5a3a';g.fillRect(3*T+4,5*T+7,7,2);g.fillStyle='#9aa4bf';g.fillRect(3*T+10,5*T+5,3,5);
+    g.fillStyle='#3a2a20';g.fillRect(5*T,8*T,2*T,T);g.fillStyle='#5a3434';g.fillRect(5*T+2,8*T+2,2*T-4,12)}
+  if(m===MAPS.mine){
+    g.fillStyle='#5a4a3a';for(let y=4;y<10;y++){g.fillRect(6*T+4,y*T,2,T);g.fillRect(7*T+10,y*T,2,T)}
+    g.fillStyle='#6a5a48';for(let y=4*T;y<10*T;y+=5)g.fillRect(6*T+3,y,26,2);
+    [[2,4],[11,4],[5,1],[8,1]].forEach(([x,y])=>{g.fillStyle='#5a3f28';g.fillRect(x*T,y*T,3,T);g.fillRect(x*T+13,y*T,3,T);g.fillRect(x*T,y*T,T,3)});
+    g.fillStyle='#4a3a2e';g.fillRect(3*T-4,7*T+2,16,10);g.fillStyle='#8a8f9c';g.fillRect(3*T-3,7*T,14,3)}
+  m.layer=c}
+
+/* ---------- dialogue ---------- */
+const COLORS={'정진영':'#f3c969','나레이션':'#9aa6c8','도윤':'#9fd4b0','하늘':'#ffd84a','박 제빵사':'#f5e6c8','마담 오':'#d9a0ff','류':'#c4cbe0',
+ '강만석 촌장':'#7fb0ff','윤 팀장':'#e8edf5','최 경장':'#7fb0ff','번개':'#d9a46a','마 형사':'#ff8a8a','백노인':'#e0c89a','시스템':'#8d97bb','마을 사람들':'#c4cbe0'};
+const FACE={'정진영':'player','도윤':'doyun','하늘':'haneul','박 제빵사':'baker','마담 오':'madame','류':'ryu','강만석 촌장':'chief','윤 팀장':'csi','최 경장':'k9','마 형사':'swat','백노인':'baek','번개':'dog'};
+function drawFace(c,key,col){const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#0a0d20';g.fillRect(0,0,48,48);
+  const rg=g.createRadialGradient(24,30,4,24,30,34);rg.addColorStop(0,col+'55');rg.addColorStop(1,'#0a0d2000');g.fillStyle=rg;g.fillRect(0,0,48,48);
+  for(let i=0;i<48;i+=4){g.fillStyle='rgba(255,255,255,.03)';g.fillRect(0,i,48,1)}
+  if(key==='dog')g.drawImage(SPR.dog[0],0,0,14,10,3,10,42,30);else g.drawImage(SPR[key][0],0,0,12,12,0,2,48,48)}
+let DQ=[],DI=0,dShown=0,dDone=null,dCb=null;
+function say(lines,cb){DQ=lines;DI=0;dCb=cb||null;S.mode='dialog';$('dlg').hidden=false;showLine()}
+function showLine(){const l=DQ[DI];if(typeof l==='function'){l();DI++;if(DI<DQ.length)showLine();else endDlg();return}
+  const [who,txt]=l;const fc=$('dlg').querySelector('.face');const fk=FACE[who];fc.hidden=!fk;if(fk)drawFace(fc,fk,COLORS[who]||'#cfd6e6');const w=$('dlg').querySelector('.who');w.textContent=who;w.style.color=COLORS[who]||'#e9edf7';w.hidden=!who;
+  dDone=txt;dShown=0;$('dlg').querySelector('.txt').textContent='';$('dlg').querySelector('.more').hidden=true}
+function advance(){if(S.mode!=='dialog')return;if(dShown<dDone.length){dShown=dDone.length;$('dlg').querySelector('.txt').textContent=dDone;$('dlg').querySelector('.more').hidden=false;return}
+  DI++;if(DI<DQ.length)showLine();else endDlg()}
+function endDlg(){$('dlg').hidden=true;S.mode='play';const cb=dCb;dCb=null;if(cb)cb()}
+function typeTick(){if(S.mode!=='dialog'||dDone==null||dShown>=dDone.length)return;dShown=Math.min(dDone.length,dShown+1.6);
+  $('dlg').querySelector('.txt').textContent=dDone.slice(0,Math.floor(dShown));if(Math.floor(dShown)%3===0)sfx.blip();
+  if(dShown>=dDone.length)$('dlg').querySelector('.more').hidden=false}
+
+let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;toastT=150}
+function addClue(id){if(S.clues.has(id))return;S.clues.add(id);toast('수첩에 기록 · '+CLUES[id].n);sfx.clue();$('cnum').textContent=S.clues.size;if(id==='cloth')bake(MAPS.shop)}
+const has=id=>S.clues.has(id);
+
+/* ---------- hints ---------- */
+function hint(){
+  if(!S.f.shopVisited)return '마을 왼쪽 위, 붉은 지붕의 공방부터 조사하자.';
+  if(!has('footprint'))return '공방 바닥에서 반짝이는 자국. 과학수사대를 소환해 감식하자.';
+  if(!has('cloth'))return '공방 뒤쪽 창문도 살펴보자.';
+  if(!has('trail'))return '발자국 앞에서 경찰견팀을 소환해 냄새를 추적하자.';
+  if(!has('boots'))return '경찰견이 멈춘 촌장 댁 창고(마을 오른쪽 아래). 강력반을 소환해 수색하자.';
+  if(!has('bell'))return '흔적은 북쪽 옛 은광으로도 이어진다. 막힌 길은 강력반이 치울 수 있다.';
+  if(!has('haneul')||!has('doyun_alibi')||!has('ryu'))return '결정적 증거는 모였다. 마을 사람들 이야기도 들어 두면 추리가 단단해진다. 준비됐다면 시계탑으로!';
+  return '모든 퍼즐이 맞춰졌다. 시계탑 앞에서 진실을 밝히자!'}
+
+/* ---------- interactions ---------- */
+const UNIT={csi:{name:'과학수사대',lead:'윤 팀장',desc:'지문·발자국·섬유 감식',spr:'csi'},k9:{name:'경찰견팀',lead:'최 경장',desc:'번개와 냄새 추적',spr:'k9'},swat:{name:'강력반',lead:'마 형사',desc:'수색·장애물 돌파·체포',spr:'swat'}};
+const DEF={csi:[['윤 팀장','감식 장비 펼쳤는데… 여긴 특별한 흔적이 없네요, 탐정님.']],
+ k9:[['최 경장','번개야, 냄새!'],['번개','킁킁… 낑?'],['최 경장','여기엔 쫓을 냄새가 없나 봅니다.']],
+ swat:[['마 형사','강력반 도착! …그런데 수색하거나 체포할 대상이 안 보입니다.']]};
+
+function enter(map,x,y,label){S.fade=1;sfx.door();setTimeout(()=>{S.map=MAPS[map];P.x=x;P.y=y;showLoc(label||S.map.label)},120)}
+let locT=0;function showLoc(t){$('loc').textContent=t;$('loc').hidden=false;locT=200}
+
+const ACT={
+ shopDoor:()=>enter('shop',6*T,7*T+6,'백노인 은세공 공방'),
+ shopExit:()=>enter('village',6*T+8,9*T+12,'은빛마을'),
+ mine:()=>{enter('mine',7*T,8*T+8,'옛 은광');if(!S.f.mineVisited){S.f.mineVisited=1;setTimeout(()=>say([['나레이션','옛 은광. 차가운 바람이 갱도 깊은 곳에서 불어온다.'],['정진영','은빛 유령의 고향이라… 유령이 수레 바퀴 자국을 남기진 않겠지.']]),400)}},
+ mineExit:()=>enter('village',14*T+8,3*T+12,'은빛마을'),
+ innDoor:()=>say([['나레이션','달빛 여관. 현관문 위에 작은 놋쇠 종이 달려 있다.'],['정진영','문을 열면 딸랑, 하고 울리겠군.']]),
+ bakeryDoor:()=>say([['나레이션','박씨네 빵집. 축제용 은방울빵 냄새가 고소하다.']]),
+ house1Door:()=>say([['나레이션','오래 비어 있는 집. 창문에 "매물" 종이가 붙어 있다.'],['정진영','이 마을, 떠나는 사람이 많은가 보군.']]),
+ house2Door:()=>say([['나레이션','하늘이네 집. 2층 창문에서 광장과 북쪽 길이 잘 내려다보인다.']]),
+ chiefDoor:()=>say([['나레이션','촌장 댁. 불이 모두 꺼져 있다.']]),
+ well:()=>say([['나레이션','오래된 우물. 물이 은빛으로 반짝인다.'],['정진영','은광에서 흘러온 물이라 은빛 우물이라 부른다던가.']]),
+ pond:()=>say([['나레이션','작은 연못에 달이 비친다. 개구리 한 마리가 퐁당.']]),
+ shed:()=>{if(S.f.shedOpen)return say([['나레이션','텅 빈 창고. 증거는 모두 수첩에 기록했다.']]);
+   if(!has('trail'))return say([['나레이션','촌장 댁 창고. 커다란 자물쇠가 걸려 있다.']]);
+   say([['나레이션','경찰견 번개가 멈췄던 곳이다. 문틈에서 은가루가 반짝인다.'],['정진영','이 안을 열어 봐야겠어. 강력반을 소환하자.']])},
+ tower:()=>{if(S.morning)return;const miss=REQUIRED.filter(k=>!has(k));
+   if(miss.length)return say([['정진영','아직 결정적인 증거가 부족해. 지금 지목하면 범인이 빠져나간다.'],['시스템','힌트: '+hint()]]);
+   say([['정진영','…증거는 충분하다.'],['정진영','마을 사람들을 모두 시계탑 광장으로 모아 주세요. 은빛 유령의 정체를 밝히겠습니다.']],startAccuse)},
+ // shop
+ tools:()=>say([['나레이션','조각칼 세트. 손잡이에 "D.Y."라고 새겨져 있다.'],['정진영','도윤이라는 견습생의 것이군. 현장에 있었다고 범인은 아니지.']]),
+ stand:()=>say([['나레이션','은종이 놓여 있던 받침대. 벨벳 방석만 남아 있다.'],['정진영','은종은 꽤 무겁다고 했지. 어른 혼자 겨우 끌 정도.']]),
+ window:()=>{if(has('cloth'))return say([['나레이션','천 조각이 걸려 있던 못. 범인은 이 창문으로 드나들었다.']]);
+   say([['나레이션','뒤쪽 창문이 살짝 열려 있다. 창틀 못에 무언가 걸려 있다.'],['정진영','파란… 모직 천 조각? 누군가 급하게 빠져나가다 걸렸군.'],()=>addClue('cloth')])},
+ prints:()=>{if(has('footprint'))return say([['나레이션','은가루 장화 자국. 창문에서 받침대로, 받침대에서 다시 창문으로 이어진다.']]);
+   say([['나레이션','바닥에 무언가 희미하게 반짝인다. 맨눈으로는 형태가 잘 보이지 않는다.'],['정진영','이건 전문가가 필요해. 과학수사대를 소환하자.']])},
+ outline:()=>say([['나레이션','백노인 어르신이 쓰러져 있던 자리. 망치와 은 조각이 흩어져 있다.'],['정진영','다행히 의식을 되찾아 병원에 계신다고 했지. "은빛… 유령…" 이라는 말만 남기고.']]),
+ furnace:()=>say([['나레이션','은을 녹이는 작은 화로. 아직 따뜻하다.']]),
+ // mine
+ rubble:()=>{if(S.f.rubble)return say([['나레이션','강력반이 치운 돌무더기. 길이 열려 있다.']]);
+   say([['나레이션','무너진 돌무더기가 갱도를 막고 있다. 틈 사이로 은빛이 희미하게 반짝인다.'],['정진영','혼자 치우긴 무리야. 강력반이라면…']])},
+ bellSpot:()=>{if(!S.f.rubble||has('bell'))return;say([['나레이션','자루에 싸인 무언가… 은종이다! 흠집 하나 없다.'],['정진영','자루에 파란 실밥이 붙어 있군. 범인은 은종을 여기 숨기고, 유령 소동이 끝나면 꺼내 갈 생각이었어.'],()=>addClue('bell')])},
+ cart:()=>say([['나레이션','녹슨 광차. 바퀴에 아직 마르지 않은 진흙이 묻어 있다.'],['정진영','최근 누가 여기 들어왔다는 뜻이야.']])};
+
+const SUM={
+ prints:{csi:()=>{if(has('footprint'))return say([['윤 팀장','이미 다 찍어 뒀어요. 280mm 광부 장화!']]);
+    say([['윤 팀장','특수 조명 켭니다!'],()=>{S.flash=24;sfx.right()},['윤 팀장','보이시죠? 은가루가 묻은 장화 발자국이에요. 크기는 280mm.'],
+     ['윤 팀장','밑창 무늬는… 옛날 광부들이 신던 장화네요. 이게 "유령 발자국"의 정체예요.'],['정진영','유령은 장화를 신지 않지. 범인은 사람이다.'],()=>addClue('footprint')])},
+  k9:()=>{if(!has('footprint'))return say([['최 경장','번개가 냄새를 맡긴 하는데, 어떤 자국을 따라가야 할지 모르겠어요.'],['최 경장','먼저 감식으로 발자국을 확실히 해 주세요!']]);
+    if(has('trail'))return say([['최 경장','번개는 이미 길을 찾았어요. 창고, 그리고 광산!']]);
+    say([['최 경장','번개야, 이 냄새 기억해!'],['번개','킁킁킁… 멍! 멍멍!'],['최 경장','두 갈래입니다! 하나는 촌장 댁 창고 쪽, 하나는 북쪽 옛 은광 쪽!'],
+     ['정진영','마을 길 위에 흔적을 표시해 주세요. 직접 따라가 보겠습니다.'],()=>addClue('trail')])}},
+ window:{csi:()=>{if(!has('cloth'))return say([['윤 팀장','창틀 못에 천 조각이 걸려 있어요. 먼저 확보해 주세요!']]);
+   say([['윤 팀장','섬유 분석 결과, 남색 고급 양모예요. 비싼 염료를 썼고요.'],['윤 팀장','이 마을에서 이런 모직 코트를 입는 사람은 많지 않을 거예요.'],['정진영','파란 모직 코트라… 어디서 봤더라.']])}},
+ stand:{csi:()=>say([['윤 팀장','장갑 자국만 있고 맨손 지문은 없네요.'],['윤 팀장','범인은 처음부터 장갑을 끼고 왔어요. 계획된 범행입니다.']])},
+ tools:{csi:()=>say([['윤 팀장','칼에 은가루는 없어요. 대신… 밀가루가 묻어 있네요?'],['정진영','밀가루라. 빵집과 관계가 있을지도.']])},
+ outline:{csi:()=>say([['윤 팀장','흉기 흔적은 없어요. 밀려 넘어지면서 작업대에 부딪히신 것 같아요.'],['정진영','처음부터 해칠 생각은 아니었다… 은종이 목적이었군.']])},
+ shed:{swat:()=>{if(S.f.shedOpen)return say(DEF.swat);
+   if(!has('trail'))return say([['마 형사','근거 없이 남의 창고를 뒤질 순 없습니다, 탐정님. 증거부터!']]);
+   say([['마 형사','추적 결과가 있으니 수색 들어갑니다! 하나, 둘, 셋!'],()=>{S.shake=18;S.f.shedOpen=1;bake(MAPS.village);tone(90,.3,'square',.06)},
+    ['마 형사','찾았습니다! 은가루 범벅인 낡은 광부 장화, 280mm!'],()=>addClue('boots'),
+    ['마 형사','그리고 이 서류… "은광 부지 매매 계약서"?'],['마 형사','조건: 은빛축제가 취소될 경우, 마을 회의에서 은광 부지 매각을 의결한다. 서명… 강만석.'],
+    ['정진영','축제를 망치면 땅을 팔 수 있다. 이게 동기였군.'],()=>addClue('contract')])},
+  k9:()=>say([['번개','멍멍멍!'],['최 경장','번개가 창고 문을 긁어요. 냄새는 확실히 이 안으로 들어갔습니다!']])},
+ rubble:{swat:()=>{if(S.f.rubble)return say(DEF.swat);say([['마 형사','비켜 주세요! 영차… 영차!'],()=>{S.shake=24;S.f.rubble=1;blockR(MAPS.mine,6,3,2,1,0);tone(70,.5,'square',.06)},['마 형사','길이 열렸습니다! 안쪽에 뭔가 있어요!']])},
+  k9:()=>say([['번개','왈왈왈!'],['최 경장','번개가 돌무더기 너머를 향해 짖어요! 이 뒤에 뭔가 있습니다!']])},
+ bellSpot:{csi:()=>{if(!has('bell'))return say(DEF.csi);say([['윤 팀장','자루의 실밥도 남색 양모예요. 공방 창문의 천 조각과 같은 섬유!']])}},
+ chief:{k9:()=>{if(!has('trail'))return say([['번개','킁…?'],['최 경장','아직 비교할 냄새가 없어요.']]);say([['번개','으르르르…'],['강만석 촌장','이, 이 개가 왜 이러오! 저리 치우시오!'],['정진영','번개가 공방의 장화 냄새를 기억하고 있는 모양이군요.']])}}};
+['doyun','haneul','baker','madame','ryu','chief'].forEach(id=>{SUM[id]=SUM[id]||{};SUM[id].swat=SUM[id].swat||(()=>say([['마 형사','체포하려면 확실한 증거가 필요합니다. 시계탑 앞에서 추리를 정리해 주세요!']]))});
+
+const TALK={
+ doyun:()=>{if(S.f.doyun)return say([['도윤','선생님… 빨리 나으셔야 할 텐데.']]);S.f.doyun=1;
+  say([['도윤','타, 탐정님이세요? 저 아니에요! 정말이에요!'],['정진영','진정해요. 어젯밤 이야기를 차근차근 들려줘요.'],
+   ['도윤','밤 10시쯤 선생님이랑 말다툼을 했어요. 선생님이 축제 끝나면 은종을 마을 박물관에 기증하신대서요.'],
+   ['도윤','저는 계속 공방에 두고 싶었거든요. 화가 나서 뛰쳐나왔고… 그다음엔 박씨네 빵집에서 밤새 반죽을 도왔어요.'],['정진영','(빵집 주인에게 확인해 보자.)']])},
+ baker:()=>{if(has('doyun_alibi'))return say([['박 제빵사','은방울빵 하나 들고 가시오, 탐정 양반. 축제가 열려야 팔 텐데 말이지.']]);
+  if(!S.f.doyun)return say([['박 제빵사','어서 오시오. 난 어제 밤새 축제용 은방울빵 반죽하느라 가게 밖을 못 봤소.'],['박 제빵사','혼자 했냐고? 허허, 그건 비밀이오.'],['정진영','(누군가 같이 있었던 모양이군.)']]);
+  say([['박 제빵사','도윤이 말이오? 밤 10시 반부터 새벽 4시까지 우리 가게에서 축제용 은방울빵 반죽을 같이 했소.'],
+   ['박 제빵사','한 발짝도 안 나갔지. 돌아갈 땐 밀가루를 뒤집어써서 꼭 눈사람 같았다니까.'],['정진영','도윤의 알리바이는 확실하군.'],()=>addClue('doyun_alibi')])},
+ haneul:()=>{if(has('haneul'))return say([['하늘','저도 커서 탐정 될 거예요. 수첩도 샀어요!']]);
+  say([['하늘','탐정님! 진짜 탐정님이에요? 우와!'],['하늘','있잖아요, 어젯밤 11시쯤 잠이 안 와서 2층 창밖을 봤거든요.'],
+   ['하늘','파란 코트를 입은 커다란 그림자가 무거운 자루를 질질 끌고 북쪽 광산 쪽으로 갔어요.'],['하늘','어른들은 유령이래요. 근데… 유령도 코트를 입어요?'],
+   ['정진영','좋은 질문이야. 유령은 코트를 입지 않지.'],()=>addClue('haneul')])},
+ madame:()=>{if(has('ryu'))return say([['마담 오','유령이든 사람이든 빨리 잡아 주세요. 축제 손님 예약이 꽉 찼다고요!']]);
+  if(!S.f.ryu)return say([['마담 오','어머, 탐정님! 유령 보셨어요? 이 마을엔 옛날부터 은광 유령 전설이 있다고요!'],['마담 오','저는 밤새 카운터에서 장부 정리를 했어요. 우리 여관 손님들은 다들 얌전한 분들이고요.']]);
+  say([['마담 오','어머, 탐정님! 유령 보셨어요? 이 마을엔 옛날부터 은광 유령 전설이 있다고요!'],['정진영','여관에 묵는 손님에 대해 여쭤보고 싶습니다.'],
+   ['마담 오','류 씨요? 밤 9시에 방에 들어가서 아침 7시까지 안 나왔어요.'],['마담 오','우리 현관문은 열기만 하면 종이 딸랑 울리는데, 밤새 조용했어요. 저는 카운터에서 밤새 장부 정리를 했고요.'],
+   ['정진영','류 씨는 그날 밤 여관 밖으로 나가지 않았다…'],()=>addClue('ryu')])},
+ ryu:()=>{if(S.f.ryu)return say([['류','은종이 돌아오면, 한 번만 소리를 들어 보고 싶군요. 사는 건 포기했습니다.']]);S.f.ryu=1;
+  say([['류','골동품상 류라고 합니다. 네, 은종을 사고 싶었죠. 백노인께 거절당했지만요.'],['류','하지만 훔칠 이유가 없습니다. 장물은 팔 수가 없거든요. 이 바닥은 좁아서.'],
+   ['류','아, 그러고 보니… 촌장님이 요즘 도시에서 온 양복 차림 사람들과 자주 만나시더군요. 광산 땅 이야기를 하던데.'],['정진영','(광산 땅이라…)']])},
+ chief:()=>{if(has('trail')&&!S.f.chiefNervous){S.f.chiefNervous=1;return say([['정진영','촌장님, 댁 창고를 좀 볼 수 있을까요?'],['강만석 촌장','차, 창고? 거긴 낡은 농기구뿐이오. 볼 것 없소!'],['정진영','(목소리가 떨리는군.)']])}
+  if(has('chief_lie'))return say([['강만석 촌장','탐정 양반, 유령을 잡을 순 없소. 축제는 취소하는 게 마을을 위한 길이오.']]);
+  say([['강만석 촌장','오, 도시에서 온 탐정이시오? 이 마을 촌장 강만석이오.'],['강만석 촌장','어젯밤엔 일찍 잠자리에 들었소. 밖엔 한 발짝도 안 나갔지.'],
+   ['강만석 촌장','이건 은빛 유령의 짓이오! 축제를 취소해야 할지도 모르겠소…'],['정진영','(남색 모직 코트… 눈에 띄는군.)'],()=>addClue('chief_lie')])}};
+
+function interact(){const c=nearest();if(!c)return;
+  if(c.npc)TALK[c.id]();else if(ACT[c.id])ACT[c.id]()}
+function nearest(){const m=S.map;let best=null,bd=1e9;const px=P.x,py=P.y-4;
+  m.npcs.forEach(n=>{if(S.morning)return;const d=Math.hypot(n.x-px,(n.y-6)-py);if(d<20&&d<bd){bd=d;best={id:n.id,npc:1,x:n.x,y:n.y-20}}});
+  m.spots.forEach(s=>{if(s.id==='bellSpot'&&(!S.f.rubble||has('bell')))return;const d=Math.hypot(s.x-px,s.y-py);if(d<s.r&&d<bd){bd=d;best={id:s.id,x:s.x,y:s.y-14}}});
+  return best}
+
+function doSummon(u){closeMenu();S.siren=70;sfx.siren();const un=UNIT[u];
+  S.unit={u,x:P.x+(P.x>S.map.w*T-30?-16:16),y:P.y,drop:30};
+  const c=nearest();const fn=c&&SUM[c.id]&&SUM[c.id][u];
+  setTimeout(()=>{const intro=[[un.lead,un.name+' 출동! 정진영 탐정님, 무엇을 도와드릴까요?']];
+    if(fn){say(intro,()=>{fn();const _cb=dCb;dCb=()=>{S.unit=null;if(_cb)_cb()};if(S.mode!=='dialog'){S.unit=null}})}
+    else say(intro.concat(DEF[u]),()=>{S.unit=null})},650)}
+
+/* ---------- menus ---------- */
+function openSummon(){if(S.mode!=='play')return;S.mode='menu';const m=$('menu');m.hidden=false;
+  m.innerHTML=`<div class="panel"><h2>경찰 소환</h2><div class="sub">탐정 정진영의 특수 능력. 조사할 곳 가까이에서 부르세요.</div><div class="cards" id="ucards"></div><div class="row"><button class="btn ghost" id="mClose">닫기</button></div></div>`;
+  Object.entries(UNIT).forEach(([k,u])=>{const b=document.createElement('button');b.className='unit';const c=document.createElement('canvas');c.width=20;c.height=28;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+    g.drawImage(SPR[u.spr][0],0,0,20,28);if(k==='k9')g.drawImage(SPR.dog[0],6,18,14,10);
+    b.append(c);const d=document.createElement('div');d.innerHTML=`<b>${u.name}</b><span>${u.lead} · ${u.desc}</span>`;b.append(d);b.onclick=()=>doSummon(k);$('ucards').append(b)});
+  $('mClose').onclick=closeMenu;setTimeout(()=>{const f=m.querySelector('.unit');f&&f.focus()},0)}
+function openNote(){if(S.mode!=='play')return;S.mode='menu';const m=$('menu');m.hidden=false;
+  let h=`<div class="panel"><h2>탐정 수첩</h2><div class="hint">다음 할 일 · ${hint()}</div><div class="cards">`;
+  Object.entries(CLUES).forEach(([k,c])=>{h+=has(k)?`<div class="clue"><b>${c.n}</b><p>${c.d}</p></div>`:`<div class="clue miss"><b>???</b><p>아직 찾지 못한 증거</p></div>`});
+  h+=`</div><div class="row"><button class="btn" id="mClose">닫기</button></div></div>`;m.innerHTML=h;$('mClose').onclick=closeMenu;$('mClose').focus()}
+function closeMenu(){$('menu').hidden=true;$('menu').innerHTML='';if(S.mode==='menu')S.mode='play'}
+
+/* ---------- accusation ---------- */
+const QS=[
+ {q:'은빛마을 사건의 범인은?',type:'suspect',ans:'chief',
+  opts:[['doyun','견습생 도윤'],['madame','여관 주인 마담 오'],['ryu','골동품상 류'],['chief','강만석 촌장'],['ghost','은빛 유령']],
+  wrong:{doyun:'도윤은 밤새 빵집에 있었다. 박 제빵사가 증인이야.',madame:'마담 오는 밤새 카운터를 지켰고, 동기도 없어.',ryu:'류 씨는 밤새 여관 방에 있었어. 현관 종이 증명하지.',ghost:'유령은 장화를 신지 않는다. 이건 사람의 짓이야.'},
+  after:[['정진영','범인은… 강만석 촌장님, 당신입니다!'],['강만석 촌장','뭐, 뭐라고? 나는 집에서 잤다고 했잖소! 증거 있소?']]},
+ {q:'"유령 발자국"을 만든 것은?',ans:'boots',after:[['정진영','공방의 은가루 발자국은 280mm 광부 장화. 바로 그 장화가 촌장님 창고에서 나왔습니다.'],['강만석 촌장','그, 그건 누가 몰래 넣어둔 거요!']]},
+ {q:'범인이 그날 밤 공방에 있었다는 증거는?',ans:'cloth',after:[['정진영','공방 창문 못에 걸린 남색 모직 조각. 지금 촌장님이 입고 계신 코트와 같은 천이죠.'],['정진영','하늘이도 밤 11시에 파란 코트의 그림자를 봤습니다.'],['강만석 촌장','으윽…']]},
+ {q:'범인의 동기를 보여 주는 증거는?',ans:'contract',after:[['정진영','은빛축제가 취소되면 은광 땅을 팔 수 있다는 계약서. 유령 소동으로 축제를 망치려 한 겁니다.']]},
+ {q:'사라진 은종은 지금 어디에?',ans:'bell',after:[['정진영','그리고 은종은 옛 은광, 돌무더기 뒤에서 찾았습니다. 자루에 묻은 실밥까지 같은 양모였죠.']]}];
+let QI=0;
+function startAccuse(){QI=0;S.hearts=3;say([['나레이션','시계탑 광장. 마을 사람들이 모여들었다.'],['정진영','지금부터 은빛 유령의 정체를 밝히겠습니다.']],showQ)}
+function showQ(){S.mode='menu';const q=QS[QI],m=$('menu');m.hidden=false;
+  const opts=q.type==='suspect'?q.opts:[...S.clues].map(k=>[k,CLUES[k].n]);
+  m.innerHTML=`<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="sub">추리 ${QI+1} / ${QS.length}</span><span class="hearts">${'♥'.repeat(S.hearts)}<span style="color:#3a4570">${'♥'.repeat(3-S.hearts)}</span></span></div><h2>${q.q}</h2><div class="opts" id="qopts"></div></div>`;
+  opts.forEach(([k,label])=>{const b=document.createElement('button');b.className='opt';b.textContent=label;b.onclick=()=>pick(k);$('qopts').append(b)});
+  setTimeout(()=>{const f=m.querySelector('.opt');f&&f.focus()},0)}
+function pick(k){const q=QS[QI];$('menu').hidden=true;$('menu').innerHTML='';
+  if(k===q.ans){sfx.right();QI++;say(q.after,()=>{if(QI<QS.length)showQ();else confess()});return}
+  sfx.wrong();S.hearts--;S.shake=12;const msg=(q.wrong&&q.wrong[k])||'…아니, 이 증거로는 설명이 안 돼.';
+  if(S.hearts<=0)return say([['정진영',msg],['마을 사람들','(웅성웅성) 탐정도 별수 없구먼…'],['정진영','…다시 증거를 정리하자. 수첩을 확인해 보자.']]);
+  say([['정진영',msg],['정진영','다시 생각해 보자.']],showQ)}
+function confess(){say([['강만석 촌장','……'],['강만석 촌장','마을이 늙어 가고 있소. 젊은이들은 떠나고, 빈집만 늘어 가지.'],['강만석 촌장','땅을 팔면 큰돈이 들어오고, 마을이 살아날 줄 알았소.'],
+  ['강만석 촌장','백노인을 다치게 할 생각은 없었소… 은종을 가져가려는데 그가 막아서서… 밀쳤을 뿐이오.'],
+  ['정진영','마을을 살리는 건 땅값이 아니라 이 마을을 아끼는 사람들이에요. 백노인 어르신이, 도윤이, 하늘이가요.'],
+  ()=>{S.siren=80;sfx.siren();S.unit={u:'swat',x:P.x+16,y:P.y,drop:30}},['마 형사','강만석 씨, 절도와 상해 혐의로 체포합니다.'],['나레이션','철컥. 수갑 소리가 시계탑 광장에 울렸다.']],morning)}
+function morning(){S.unit=null;S.fade=1;setTimeout(()=>{S.morning=true;const v=MAPS.village;v.dark=.08;bake(v);
+  v.npcs=[{id:'baek',spr:'baek',x:16*T+8,y:11*T+8},{id:'doyun',spr:'doyun',x:15*T+4,y:12*T+4},{id:'haneul',spr:'haneul',x:19*T+8,y:12*T+2},
+   {id:'baker',spr:'baker',x:14*T,y:13*T+8},{id:'madame',spr:'madame',x:20*T+8,y:13*T+10},{id:'ryu',spr:'ryu',x:13*T,y:11*T+8}];
+  S.map=v;P.x=17*T+12;P.y=13*T+8;showLoc('다음 날 아침 · 은빛축제');
+  setTimeout(()=>say([['나레이션','다음 날 아침.'],()=>sfx.bell(),['나레이션','은빛축제의 시작을 알리는 은종 소리가 마을 가득 울려 퍼졌다.'],
+   ['백노인','탐정 양반, 고맙소. 은종이 이렇게 맑게 울리는 건 처음 듣는 것 같구려.'],['도윤','선생님! 이번 축제 장식은 제가 다 할게요! 박물관 기증도… 찬성이에요.'],
+   ['류','…좋은 소리군요. 사지 않길 잘했습니다.'],['하늘','탐정님! 저도 커서 탐정 될래요!'],['정진영','하늘이라면 좋은 탐정이 될 거야. 질문할 줄 아니까.'],
+   ['정진영','사건 종결. …다음 사건이 기다리고 있겠지.']],credits),600)},150)}
+function credits(){S.mode='credits';$('credits').hidden=false;drawLogo()}
+function drawLogo(){const c=$('logo'),g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,120,100);g.fillStyle='#fff';
+  const sx=18,sw=42,sh=36,gap=4,d=38;const top=(100-(d+gap+sh))/2;
+  g.beginPath();g.arc(sx+sw/2,top+d/2,d/2,0,Math.PI*2);g.fill();g.fillRect(sx,top+d+gap,sw,sh);
+  const tx=sx+sw+gap,tb=top+d+gap+sh;g.beginPath();g.moveTo(tx,top);g.lineTo(tx,tb);g.lineTo(tx+44,tb);g.closePath();g.fill()}
+
+/* ---------- movement ---------- */
+function solidAt(px,py){const m=S.map,tx=Math.floor(px/T),ty=Math.floor(py/T);if(tx<0||ty<0||tx>=m.w||ty>=m.h)return true;
+  if(SOLID_TILE[m.tiles[ty*m.w+tx]])return true;if(m.block[ty*m.w+tx])return true;
+  for(const n of m.npcs){if(Math.abs(n.x-px)<6&&Math.abs(n.y-py)<4)return true}return false}
+function canStand(x,y){return!(solidAt(x-4,y-3)||solidAt(x+4,y-3)||solidAt(x-4,y+1)||solidAt(x+4,y+1))}
+function update(){S.t++;
+  if(toastT>0&&--toastT===0)$('toast').hidden=true;if(locT>0&&--locT===0)$('loc').hidden=true;
+  if(S.fade>0)S.fade=Math.max(0,S.fade-.04);if(S.siren>0)S.siren--;if(S.flash>0)S.flash--;if(S.shake>0)S.shake--;
+  if(S.unit&&S.unit.drop>0)S.unit.drop-=3;
+  typeTick();
+  if(S.mode==='title'){S.cam.x=(Math.sin(S.t/600)*.5+.5)*(MAPS.village.w*T-W);S.cam.y=60+Math.sin(S.t/450)*40;return}
+  P.moving=false;
+  if(S.mode==='play'){let dx=0,dy=0;if(keys.left)dx--;if(keys.right)dx++;if(keys.up)dy--;if(keys.down)dy++;
+    if(dx||dy){const sp=1.25/(dx&&dy?1.414:1);if(canStand(P.x+dx*sp,P.y))P.x+=dx*sp;if(canStand(P.x,P.y+dy*sp))P.y+=dy*sp;P.moving=true;P.walk++;}}
+  P.frame=P.moving?((P.walk>>3)&1):0;
+  const m=S.map,mw=m.w*T,mh=m.h*T;
+  S.cam.x=mw<=W?(mw-W)/2:clamp(P.x-W/2,0,mw-W);S.cam.y=mh<=H?(mh-H)/2:clamp(P.y-8-H/2,0,mh-H);
+  if(S.mode==='play'&&!S.f.shopVisited&&m===MAPS.shop){S.f.shopVisited=1;setTimeout(()=>say([['나레이션','백노인 은세공 공방. 은 냄새와 차가운 밤공기가 뒤섞여 있다.'],['정진영','창문이 열려 있고, 바닥이 반짝인다. 하나씩 보자.']]),300)}}
+
+/* ---------- render ---------- */
+const motes=Array.from({length:40},(_,i)=>({x:hash(i,1)*576,y:hash(i,2)*416,s:hash(i,3)*.3+.1,p:hash(i,4)*6}));
+function drawSpr(sp,x,y,f,bob=0){const c=sp[f];ctx.fillStyle='rgba(0,0,10,.4)';ctx.fillRect(Math.round(x-4),Math.round(y-1),8,3);ctx.fillRect(Math.round(x-5),Math.round(y),10,1);ctx.drawImage(c,Math.round(x-c.width/2),Math.round(y-c.height+2+bob))}
+function render(){const m=S.title?MAPS.village:S.map||MAPS.village;
+  let cx=Math.round(S.cam.x),cy=Math.round(S.cam.y);if(S.shake){cx+=((Math.random()*4)|0)-2;cy+=((Math.random()*4)|0)-2}
+  ctx.fillStyle='#04050b';ctx.fillRect(0,0,W,H);
+  if(!m.layer)bake(m);ctx.drawImage(m.layer,-cx,-cy);
+  // trail
+  if(m===MAPS.village&&has('trail')&&!S.morning){const lines=[[[6,9],[6,13],[23,13],[23,21],[32,21],[32,20]],[[6,13],[14,13],[14,3]]];
+    lines.forEach(L=>{let k=0;for(let i=0;i<L.length-1;i++){const[a,b]=[L[i],L[i+1]];const ax=a[0]*T+8,ay=a[1]*T+8,bx=b[0]*T+8,by=b[1]*T+8,len=Math.hypot(bx-ax,by-ay);
+      for(let s=0;s<len;s+=7){k++;const tw=(Math.sin(S.t/12+k*.7)+1)/2;ctx.fillStyle=`rgba(225,232,248,${.35+tw*.55})`;ctx.fillRect(Math.round(ax+(bx-ax)*s/len-cx),Math.round(ay+(by-ay)*s/len-cy),2,2)}}})}
+  // shop footprints
+  if(m===MAPS.shop){const pts=[[150,40],[140,52],[130,62],[118,70],[104,62],[96,52],[110,82],[126,92],[140,86],[150,74]];
+    pts.forEach(([x,y],i)=>{const tw=(Math.sin(S.t/10+i)+1)/2;ctx.fillStyle=has('footprint')?`rgba(230,236,250,${.6+tw*.4})`:`rgba(220,228,245,${tw*.25})`;
+      ctx.fillRect(x-cx,y-cy,3,has('footprint')?5:2);if(has('footprint')){ctx.fillRect(x-cx,y-cy+6,3,2)}})}
+  // mine rubble & bell
+  if(m===MAPS.mine){if(!S.f.rubble){for(let i=0;i<14;i++){const a=hash(i,9),b=hash(9,i);ctx.fillStyle=i%3?'#4a4a5a':'#5e5e70';ctx.fillRect(6*T+a*26-cx,3*T+b*12-cy,8,6)}}
+    if(S.f.rubble&&!has('bell')){const bx=7*T-cx,by=1*T+6-cy;ctx.fillStyle='#8a7a5a';ctx.fillRect(bx-7,by,14,12);ctx.fillStyle='#d9dfec';ctx.fillRect(bx-4,by-4,8,6);ctx.fillStyle='#fff';ctx.fillRect(bx-2,by-3,2,3);
+      if(S.t%40<20){ctx.fillStyle='#fff';ctx.fillRect(bx+5,by-6,1,3);ctx.fillRect(bx+4,by-5,3,1)}}}
+  // characters
+  const list=[];m.npcs.forEach(n=>list.push({y:n.y,d:()=>drawSpr(SPR[n.spr],n.x-cx,n.y-cy,0,(Math.floor(S.t/30+n.x)%2))}));
+  if(S.mode!=='title')list.push({y:P.y,d:()=>drawSpr(SPR.player,P.x-cx,P.y-cy,P.frame)});
+  if(S.unit){const u=S.unit,dr=Math.max(0,u.drop);list.push({y:u.y,d:()=>{drawSpr(SPR[UNIT[u.u].spr],u.x-cx,u.y-cy-dr,0);if(u.u==='k9')ctx.drawImage(SPR.dog[(S.t>>3)&1],Math.round(u.x-cx+3),Math.round(u.y-cy-7-dr))}})}
+  list.sort((a,b)=>a.y-b.y).forEach(o=>o.d());
+  if(m===MAPS.village){
+    // chimney smoke
+    m.buildings.forEach(b=>{if(!['shop','inn','bakery','house2'].includes(b.id))return;const sx=b.x*T+b.w*T-11,sy=b.y*T-8;
+      for(let k=0;k<6;k++){const ph=((S.t*.35+k*11)%66),a=(1-ph/66)*.35,r=2+ph/14;const x=sx+Math.sin((S.t+k*40)/30)*ph/10+ph/8-cx,y=sy-ph-cy;
+        ctx.fillStyle=`rgba(200,206,224,${a})`;ctx.fillRect(Math.round(x-r),Math.round(y-r),Math.round(r*2),Math.round(r*2))}});
+    // pond shimmer
+    [[30,23],[31,23],[30,24],[31,24],[29,24]].forEach(([x,y],i)=>{const o=(S.t/6+i*5)%14;ctx.fillStyle=S.morning?'rgba(255,255,255,.5)':'rgba(200,215,255,.45)';ctx.fillRect(Math.round(x*T+o-cx),Math.round(y*T+5+(i%2)*5-cy),3,1)});
+    // festival bunting
+    const cols=['#cfd6e6','#c0394d','#5aa8ff','#f3c969'];
+    [[12*T+8,10*T-9,22*T+8,10*T-9],[24*T+8,12*T-9,33*T+8,12*T-9],[5*T+8,12*T-9,10*T+8,12*T-9]].forEach(([x1,y1,x2,y2],bi)=>{const n=Math.floor((x2-x1)/7);
+      for(let i=0;i<=n;i++){const t=i/n,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t+Math.sin(t*Math.PI)*10;ctx.fillStyle='#1a1622';ctx.fillRect(Math.round(x-cx),Math.round(y-cy),7,1);
+        if(i<n){const sw=Math.sin(S.t/20+i)*.8;ctx.fillStyle=cols[(i+bi)%4];const fx=Math.round(x-cx+1+sw),fy=Math.round(y-cy+1);ctx.fillRect(fx,fy,5,2);ctx.fillRect(fx+1,fy+2,3,2);ctx.fillRect(fx+2,fy+4,1,1)}}});
+    // drifting fog
+    if(!S.morning)for(let i=0;i<3;i++){const fx=((S.t*.15+i*230)%(m.w*T+200))-100-cx,fy=120+i*110-cy;const fg=ctx.createRadialGradient(fx,fy,0,fx,fy,90);fg.addColorStop(0,'rgba(190,200,235,.11)');fg.addColorStop(1,'rgba(190,200,235,0)');ctx.fillStyle=fg;ctx.fillRect(fx-90,fy-45,180,90)}}
+  // motes
+  if(m===MAPS.village){motes.forEach(p=>{p.y-=p.s;p.x+=Math.sin(S.t/60+p.p)*.15;if(p.y<0)p.y=416;const a=(Math.sin(S.t/30+p.p)+1)/2;
+    ctx.fillStyle=S.morning?`rgba(255,250,220,${a*.5})`:`rgba(220,228,248,${a*.7})`;ctx.fillRect(Math.round(p.x-cx),Math.round(p.y-cy),1,1)})}
+  // darkness
+  const dark=S.mode==='title'?.6:m.dark;
+  if(dark>.01){dctx.globalCompositeOperation='source-over';dctx.clearRect(0,0,W,H);if(S.morning){dctx.fillStyle=`rgba(255,200,140,${dark})`}else{const lg=dctx.createLinearGradient(0,0,W*.6,H);lg.addColorStop(0,`rgba(24,32,74,${dark-.12})`);lg.addColorStop(1,`rgba(4,5,18,${Math.min(.96,dark+.06)})`);dctx.fillStyle=lg}dctx.fillRect(0,0,W,H);
+    if(!S.morning){dctx.globalCompositeOperation='destination-out';
+      const hole=(x,y,r,s=1)=>{const g=dctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(0,0,0,${s})`);g.addColorStop(.55,`rgba(0,0,0,${s*.7})`);g.addColorStop(1,'rgba(0,0,0,0)');dctx.fillStyle=g;dctx.beginPath();dctx.arc(x,y,r,0,7);dctx.fill()};
+      m.lights.forEach(l=>hole(l.x-cx,l.y-cy,l.r*(l.lamp?1+Math.sin(S.t/9+l.x)*.04:1)));if(S.mode!=='title')hole(P.x-cx,P.y-8-cy,m.plr);
+      if(S.unit)hole(S.unit.x-cx,S.unit.y-8-cy,30)}
+    ctx.drawImage(dk,0,0);
+    if(!S.morning){ctx.globalCompositeOperation='lighter';m.lights.forEach(l=>{const x=l.x-cx,y=l.y-cy+(l.lamp||l.warm?0:10);if(x<-40||x>W+40||y<-40||y>H+40)return;
+      const g=ctx.createRadialGradient(x,y,0,x,y,l.r*.7);g.addColorStop(0,l.warm?'rgba(255,120,50,.22)':l.lamp?'rgba(243,201,105,.2)':'rgba(243,190,100,.13)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-l.r,y-l.r,l.r*2,l.r*2)});
+      ctx.globalCompositeOperation='source-over'}}
+  // moon (title)
+  if(S.mode==='title'){ctx.fillStyle='#e8edf7';ctx.beginPath();ctx.arc(210,30,14,0,7);ctx.fill();ctx.fillStyle='#cfd6e6';ctx.fillRect(203,26,4,3);ctx.fillRect(214,34,3,2)}
+  if(S.mode!=='title'){const vg=ctx.createRadialGradient(W/2,H/2,H*.45,W/2,H/2,H*.9);vg.addColorStop(0,'rgba(0,0,10,0)');vg.addColorStop(1,S.morning?'rgba(40,20,0,.25)':'rgba(0,0,10,.5)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H)}
+  // indicator
+  if(S.mode==='play'){const c=nearest();if(c){const x=Math.round(c.x-cx),y=Math.round(c.y-cy+Math.sin(S.t/8)*1.5)-4;ctx.fillStyle='#0b0a16';ctx.fillRect(x-6,y-6,13,11);ctx.fillRect(x-1,y+5,3,2);ctx.fillStyle=c.npc?'#f4f2ec':'#f3c969';ctx.fillRect(x-5,y-5,11,9);ctx.fillRect(x,y+4,1,2);ctx.fillStyle='#0b0a16';
+    if(c.npc){ctx.fillRect(x-3,y-1,2,2);ctx.fillRect(x,y-1,2,2);ctx.fillRect(x+3,y-1,2,2)}else{ctx.fillRect(x,y-4,2,5);ctx.fillRect(x,y+2,2,1)}}}
+  // effects
+  if(S.siren>0){const on=(S.siren>>3)&1;const g=ctx.createRadialGradient(W/2,H/2,H*.35,W/2,H/2,H*.85);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,on?'rgba(255,60,80,.55)':'rgba(70,140,255,.55)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  if(S.flash>0){ctx.fillStyle=`rgba(170,210,255,${S.flash/24*.6})`;ctx.fillRect(0,0,W,H)}
+  if(S.fade>0){ctx.fillStyle=`rgba(0,0,0,${Math.min(1,S.fade*1.4)})`;ctx.fillRect(0,0,W,H)}}
+
+/* ---------- loop ---------- */
+let last=performance.now(),acc=0;
+function loop(now){acc+=Math.min(100,now-last);last=now;while(acc>=16.67){update();acc-=16.67}render();requestAnimationFrame(loop)}
+
+/* ---------- input ---------- */
+const KMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+function action(a){ac();
+  if(S.mode==='dialog'){if(a==='act')advance();return}
+  if(S.mode==='menu'){if(a==='note'||a==='summon'||a==='esc'){if(!$('menu').querySelector('#mClose'))return;closeMenu()}return}
+  if(S.mode!=='play')return;if(a==='act')interact();if(a==='summon')openSummon();if(a==='note')openNote()}
+addEventListener('keydown',e=>{if(KMAP[e.code]){keys[KMAP[e.code]]=1;e.preventDefault()}
+  if(e.repeat)return;
+  if(['KeyE','Space','Enter'].includes(e.code)){if(S.mode==='menu'||S.mode==='title'||S.mode==='credits')return;e.preventDefault();action('act')}
+  if(e.code==='KeyQ')action('summon');if(e.code==='KeyC')action('note');if(e.code==='Escape')action('esc')});
+addEventListener('keyup',e=>{if(KMAP[e.code])keys[KMAP[e.code]]=0});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
+document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();keys[k]=1;b.classList.add('on')},off=e=>{keys[k]=0;b.classList.remove('on')};
+  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
+document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();action(b.dataset.a)}));
+$('dlg').addEventListener('click',()=>advance());
+$('bNote').onclick=()=>action('note');
+$('bSnd').onclick=()=>{sound=!sound;$('bSnd').textContent=sound?'소리 켬':'소리 끔'};
+$('bStart').onclick=()=>{ac();$('title').hidden=true;$('hud').hidden=false;S.mode='play';S.map=MAPS.village;P.x=17*T+8;P.y=23*T+8;fit();
+  say([['나레이션','축제 전날 밤, 은빛마을.'],['나레이션','마을의 보물 "은종"이 사라지고, 은세공 장인 백노인이 공방에서 쓰러진 채 발견되었다.'],
+   ['나레이션','공방 바닥엔 은빛으로 빛나는 발자국. 마을 사람들은 옛 은광의 "은빛 유령"이 돌아왔다고 수군댄다.'],
+   ['정진영','유령이라… 유령은 발자국을 남기지 않지.'],['정진영','이 사건, 탐정 정진영이 맡겠습니다.'],
+   ['시스템',(isTouch()?'왼쪽 버튼으로 이동, [조사]로 대화·조사, [소환]으로 과학수사대·경찰견팀·강력반을 부를 수 있어요. 막히면 [수첩]을 보세요.':'방향키로 이동, E로 대화·조사, Q로 과학수사대·경찰견팀·강력반 소환, C로 수첩. 막히면 수첩을 보세요.')]],
+   ()=>showLoc('은빛마을'))};
+$('bAgain').onclick=()=>location.reload();
+
+/* ---------- layout ---------- */
+const isTouch=()=>matchMedia('(pointer:coarse)').matches||innerWidth<700;
+function fit(){const pad=$('pad'),touch=isTouch();pad.classList.toggle('on',touch);$('keys').hidden=touch;
+  const app=$('app');const avW=app.clientWidth;const padH=touch?pad.offsetHeight:$('keys').offsetHeight;const hudH=$('hud').hidden?0:$('hud').offsetHeight;
+  const avH=innerHeight-padH-hudH-36;const s=Math.max(.5,Math.min(avW/W,avH/H));
+  const st=$('stage');st.style.width=Math.floor(W*s)+'px';st.style.height=Math.floor(H*s)+'px';st.style.setProperty('--u',s.toFixed(3));$('hud').style.width=Math.floor(W*s)+'px'}
+addEventListener('resize',fit);fit();
+bake(MAPS.village);requestAnimationFrame(loop);
+})();
+</script>
